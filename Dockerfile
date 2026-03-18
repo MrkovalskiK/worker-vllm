@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 # Setup for Option 2: Building the Image with the Model included
 ARG MODEL_NAME=""
-ARG TOKENIZER_NAME=""
+ARG TOKENIZER_NAME="Qwen/Qwen3.5-35B-A3B"
 ARG BASE_PATH="/runpod-volume"
 ARG QUANTIZATION=""
 ARG MODEL_REVISION=""
@@ -58,6 +58,9 @@ RUN --mount=type=secret,id=HF_TOKEN,required=false \
     fi && \
     if [ -n "$MODEL_NAME" ]; then \
     python3 /src/download_model.py; \
+    fi && \
+    if [ -n "$TOKENIZER_NAME" ]; then \
+    python3 /src/download_tokenizer.py; \
     fi
 
 # Start the handler
