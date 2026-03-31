@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import shutil
 from typing import get_origin, get_args
 from torch.cuda import device_count
 from vllm import AsyncEngineArgs
@@ -81,6 +82,17 @@ def _convert_env_value_to_field_type(value: str, field_name: str, field_type: ty
         if type(None) in (args or ()):
             return None
         raise ValueError("empty value not allowed for non-optional field")
+    # Special case for Union[bool, str] (e.g. vLLM hf_token):
+    # use boolean only for explicit boolean literals, otherwise keep the string.
+    union_args = get_args(field_type) if hasattr(field_type, "__args__") else ()
+    non_none_union_args = [a for a in union_args if a is not type(None)]
+    if bool in non_none_union_args and str in non_none_union_args:
+        lower_val = str(val).lower()
+        if lower_val in ("true", "1", "yes", "on"):
+            return True
+        if lower_val in ("false", "0", "no", "off"):
+            return False
+        return str(val)
     effective_type = _resolve_field_type(field_type)
     # bool
     if effective_type is bool:
@@ -330,6 +342,29 @@ def _sanitize_hf_overrides(hf_overrides: dict) -> dict | None:
     return result or None
 
 
+def _maybe_disable_flashinfer_prefill_without_nvcc(args: dict, valid_fields: dict) -> None:
+    """Avoid FlashInfer JIT crashes in images that do not include nvcc."""
+    field = "disable_flashinfer_prefill"
+
+    # Respect explicit user config and older/newer vLLM versions.
+    if field not in valid_fields:
+        return
+    if os.getenv("DISABLE_FLASHINFER_PREFILL") is not None:
+        return
+    if field in args:
+        return
+
+    if shutil.which("nvcc") or os.path.exists("/usr/local/cuda/bin/nvcc"):
+        return
+
+    args[field] = True
+    logging.warning(
+        "nvcc not found and DISABLE_FLASHINFER_PREFILL is unset; "
+        "auto-setting disable_flashinfer_prefill=True to avoid FlashInfer JIT failures. "
+        "Set DISABLE_FLASHINFER_PREFILL=false to force FlashInfer prefill."
+    )
+
+
 def get_local_args():
     """
     Retrieve local arguments from a JSON file.
@@ -351,6 +386,8 @@ def get_local_args():
     os.environ["HF_HUB_OFFLINE"] = "1"
 
     return local_args
+
+
 def get_engine_args():
     # Start with worker custom defaults (only where we differ from vLLM)
     args = dict(DEFAULT_ARGS)
@@ -452,6 +489,8 @@ def get_engine_args():
         # Honor old behavior: if DISABLE_LOG_REQUESTS=true, don't enable logging
         if os.getenv('DISABLE_LOG_REQUESTS', 'False').lower() == 'true':
             args['enable_log_requests'] = False
+
+    _maybe_disable_flashinfer_prefill_without_nvcc(args, valid_fields)
 
     # Add speculative decoding configuration if present
     speculative_config = get_speculative_config()

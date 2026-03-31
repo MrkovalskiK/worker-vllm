@@ -69,6 +69,8 @@ Configure worker-vllm using environment variables:
 
 Any env var whose name matches a valid `AsyncEngineArgs` field (uppercased) is applied automatically. Backward-compat aliases: `MODEL_NAME`, `TOKENIZER_NAME`, `MAX_CONTEXT_LEN_TO_CAPTURE`. This lets you configure any vLLM option without waiting for explicit worker support.
 
+> **FlashInfer + nvcc note:** If `DISABLE_FLASHINFER_PREFILL` is not set and `nvcc` is unavailable in the runtime image, the worker now auto-sets `disable_flashinfer_prefill=True` to prevent FlashInfer JIT compile failures. Set `DISABLE_FLASHINFER_PREFILL=false` to force FlashInfer prefill.
+
 For the complete list of all available environment variables, examples, and detailed descriptions: **[Configuration](docs/configuration.md)**
 
 ## Option 2: Build Docker Image with Model Inside

@@ -25,7 +25,11 @@ class vLLMEngine:
     def __init__(self, engine = None):
         load_dotenv() # For local development
         self.engine_args = get_engine_args()
-        logging.info(f"Engine args: {self.engine_args}")
+        safe_engine_args = str(self.engine_args)
+        hf_token = getattr(self.engine_args, "hf_token", None)
+        if isinstance(hf_token, str) and hf_token:
+            safe_engine_args = safe_engine_args.replace(hf_token, "***")
+        logging.info("Engine args: %s", safe_engine_args)
         
         # Initialize vLLM engine first
         self.llm = self._initialize_llm() if engine is None else engine.llm

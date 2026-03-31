@@ -1,4 +1,5 @@
-FROM nvidia/cuda:12.9.1-base-ubuntu22.04 
+# Use CUDA devel image so nvcc is available for FlashInfer JIT kernels.
+FROM nvidia/cuda:12.9.1-devel-ubuntu22.04 
 
 RUN apt-get update -y \
     && apt-get install -y python3-pip

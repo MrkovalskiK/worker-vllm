@@ -98,6 +98,7 @@ If `SPECULATIVE_CONFIG` is set, it takes priority over individual env vars. When
 | `DISABLE_CUSTOM_ALL_REDUCE`    | `0`     | `int`           | Enables or disables custom all reduce.                                                                                              |
 | `ENABLE_EXPERT_PARALLEL`       | `False` | `bool`          | Enable Expert Parallel for MoE models.                                                                                              |
 | `ATTENTION_BACKEND`            | `None`  | `str`           | Attention backend to use (e.g., `FLASH_ATTN`, `FLASHINFER`, `TRITON_FLASH_ATTN`). Replaces deprecated `VLLM_ATTENTION_BACKEND`.     |
+| `DISABLE_FLASHINFER_PREFILL`   | `None`  | `bool`          | Disable FlashInfer prefill kernels. Useful when `nvcc` is unavailable in runtime image to avoid FlashInfer JIT compile failures.     |
 | `ASYNC_SCHEDULING`             | `None`  | `bool`          | Enable async scheduling (overlaps engine scheduling with GPU execution). Default: enabled in vLLM 0.14.0+. Set to `false` to disable. |
 | `STREAM_INTERVAL`              | `1`     | `int`           | Controls how often to yield streaming results. Lower = more frequent updates.                                                        |
 
