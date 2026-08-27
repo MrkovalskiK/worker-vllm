@@ -2,13 +2,13 @@ ray
 pandas
 pyarrow
 runpod
-huggingface-hub==0.36.2
+huggingface-hub==1.29.0
 packaging
 typing-extensions>=4.8.0
 pydantic
 pydantic-settings
 hf-transfer
-transformers==4.57.1
+transformers==5.15.0
 bitsandbytes>=0.45.0
 kernels
 torch-c-dlpack-ext
